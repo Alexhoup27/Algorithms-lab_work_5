@@ -145,61 +145,91 @@ private:
     int* data;
     int tail;
     int head;
-    int _len;
-    bool empty;
-    bool reverse_flag;
+    unsigned int _len;
+
+    int search_place(int to_add) {
+        if (head < tail) {
+            for (int i = head; i < tail; i++) {
+                if (to_add<= data[i]) {
+                    return i;
+                }
+            }
+        }
+        return tail;
+    }
+
+    void shift_left(int ind) {
+        if (head > tail && head < ind) {
+            for (int i = head; i<= ind; i++) {
+                data[i] = data[i+1];
+            }
+        }else if (head > tail && head > ind) {
+            for (int i = head; i<_len ; i++) {
+                data[i] = data[i+1];
+            }
+            data[_len] = data[0];
+            for (int i = 0; i<= ind; i++) {
+                data[i] = data[i+1];
+            }
+        }else {
+            for (int i = head; i<= ind; i++) {
+                data[i] = data[i+1];
+            }
+        }
+    }
+    void shift_right(int ind) {
+        if (tail > ind) {
+            for (int i = tail; i>= ind; i --) {
+                data[i] = data[i-1];
+            }
+        }else if (tail < ind) {
+            for (int i= tail; i >0;i--) {
+                data[i] = data[i-1];
+            }
+            data[_len] = data[0];
+            for (int i = _len; i >= ind; i--) {
+                data[i] = data[i-1];
+            }
+        }
+    }
 
 public:
-    bool add(int to_add) {
-        if (tail == -1) {
-            return false;
-        }else {
-            empty = false;
-            data[tail] = to_add;
-            tail ++;
-            if (head == -1) {
-                head = tail -1;
-                reverse_flag = false;
-            }
-            if (tail >= _len){
-                tail = 0;
-                reverse_flag = true;
-            }
-            return true;
+
+    int add(int to_add){
+        int length = now_len();
+        if (length >= _len){
+            return 0;
         }
+        int ind = search_place(to_add);
+        if (ind - head <= length /2) {
+            shift_left(ind);
+        }else {
+            shift_right(ind);
+        }
+        data[ind] = to_add;
+        return 0;
     }
 
     int remove() {
-        if (head == -1) {
-            return -1;
-        }
         int to_return = data[head];
-        head ++;
-        if (head >= tail && reverse_flag){
-            head = -1;
-        }
-        if (head >= _len) {
+        if (head < _len) {
+            head++;
+        }else {
             head = 0;
-            reverse_flag = false;
         }
-        return to_return;
+        return data[head];
     }
 
-    int len() {
-        if (head > tail) {
-            return tail + _len - head;
-        }else if (tail > head) {
+    int now_len() {
+        if (tail > head) {
             return tail - head;
-        }else if (tail == head || head == -1) {
-            return 0;
-        }else {
-            return -1;
         }
+        return _len - head + tail;
     }
 
     void print() {
         if (head > tail) {
-            for (int i = head; i < _len; i++) {
+            for (int i = head; i < _len + 1; i++) {
                 std::cout << data[i]<<std::endl;
             }
             for (int i = 0; i< tail; i ++) {
@@ -214,12 +244,17 @@ public:
         }
     }
 
-    QueueWithPriority(int n) {
+    QueueWithPriority(unsigned int n=10) {
+        if (n == 0) {
+            throw std::invalid_argument("Wrong number!\n n should be bigger then 0");
+        }
+        if (n> 4294967295) {
+            throw std::invalid_argument("Wrong number!\n n should be lower then 4294967295");
+        }
         data = new int[n];
-        head = -1;
+        head = 0;
         tail = 0;
         _len = n;
-        empty = true;
     }
     ~ QueueWithPriority() {
         delete[] data;
