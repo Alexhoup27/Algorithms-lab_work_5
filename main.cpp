@@ -33,7 +33,6 @@ struct Record {
         time.hh == to_comp.time.hh &&
         time.mm == to_comp.time.mm &&
         cost == to_comp.cost){
-            bool key = true;
             if (departure_days.size() == to_comp.departure_days.size()) {
                 if (departure_days.empty()){
                     return true;
@@ -54,7 +53,6 @@ struct Record {
             time.hh != to_comp.time.hh &&
             time.mm != to_comp.time.mm &&
             cost != to_comp.cost){
-            bool key = true;
             for (auto elem:departure_days){
                 if (departure_days == to_comp.departure_days){
                     return false;
@@ -143,52 +141,33 @@ Record make_record(std::string line) {
 class QueueWithPriority{
 private:
     int* data;
-    int tail;
-    int head;
+    unsigned int tail;
+    unsigned int head;
     unsigned int _len;
 
-    int search_place(int to_add) {
-        if (head < tail) {
-            for (int i = head; i < tail; i++) {
-                if (to_add<= data[i]) {
-                    return i;
-                }
+    unsigned int search_place(int to_add) {
+        for (unsigned int i = head; i != tail; i = (i+1) / _len) {
+            if (to_add<= data[i]) {
+                return i;
             }
         }
         return tail;
     }
 
-    void shift_left(int ind) {
-        if (head > tail && head < ind) {
-            for (int i = head; i<= ind; i++) {
-                data[i] = data[i+1];
-            }
-        }else if (head > tail && head > ind) {
-            for (int i = head; i<_len ; i++) {
-                data[i] = data[i+1];
-            }
-            data[_len] = data[0];
-            for (int i = 0; i<= ind; i++) {
-                data[i] = data[i+1];
-            }
-        }else {
-            for (int i = head; i<= ind; i++) {
-                data[i] = data[i+1];
-            }
+    void shift_left(unsigned int ind) {
+        for (unsigned int i = head; i != ind; i = (i+1) / _len) {//start from head - 1
+            data[i] = data[i+1];
         }
     }
-    void shift_right(int ind) {
-        if (tail > ind) {
-            for (int i = tail; i>= ind; i --) {
-                data[i] = data[i-1];
+    void shift_right(unsigned int ind) {
+        for (unsigned int i = tail; i != ind; i = (i-1) / _len) {//think about how to go correctly
+            if (i == _len) {
+                data[i] = data[0];
+                continue;
             }
-        }else if (tail < ind) {
-            for (int i= tail; i >0;i--) {
-                data[i] = data[i-1];
-            }
-            data[_len] = data[0];
-            for (int i = _len; i >= ind; i--) {
-                data[i] = data[i-1];
+            data[i] = data[i-1];
+            if (i == 0) {
+                i = _len;
             }
         }
     }
@@ -196,31 +175,53 @@ private:
 public:
 
     int add(int to_add){
-        int length = now_len();
+        unsigned int length = now_len();
         if (length >= _len){
             return 0;
         }
-        int ind = search_place(to_add);
+        unsigned int ind = search_place(to_add);
+        if (ind == head) {
+            if (head == 0) {
+                head = _len;
+            }else {
+                head = (head - 1) / _len;
+            }
+            data[head] = to_add;
+            return 1;
+        }else if (ind  == tail) {
+            tail = (tail + 1) / _len;
+            data[tail] = to_add;
+            return 1;
+        }
         if (ind - head <= length /2) {
             shift_left(ind);
+            if (head == 0) {
+                head = _len;
+            }else {
+                head = (head - 1) / _len;
+            }
         }else {
             shift_right(ind);
+            tail = (tail + 1) / _len;
         }
         data[ind] = to_add;
-        return 0;
+        return 1;
     }
 
     int remove() {
+        if (head==tail || now_len() == 0) {
+            throw std::invalid_argument("Can`t delete smth, because queue is empty");
+        }
         int to_return = data[head];
         if (head < _len) {
             head++;
         }else {
             head = 0;
         }
-        return data[head];
+        return to_return;
     }
 
-    int now_len() {
+    unsigned int now_len() {
         if (tail > head) {
             return tail - head;
         }
@@ -229,14 +230,14 @@ public:
 
     void print() {
         if (head > tail) {
-            for (int i = head; i < _len + 1; i++) {
+            for (unsigned int i = head; i < _len + 1; i++) {
                 std::cout << data[i]<<std::endl;
             }
-            for (int i = 0; i< tail; i ++) {
+            for (unsigned int i = 0; i< tail; i ++) {
                 std::cout << data[i]<<std::endl;
             }
         }else if (tail > head) {
-            for (int i = head; i< tail; i ++) {
+            for (unsigned int i = head; i< tail; i ++) {
                 std::cout << data[i]<<std::endl;
             }
         }else {
