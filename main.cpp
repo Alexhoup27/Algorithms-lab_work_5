@@ -146,7 +146,7 @@ private:
     unsigned int _len;
 
     unsigned int search_place(int to_add) {
-        for (unsigned int i = head; i != tail; i = (i+1) / _len) {
+        for (unsigned int i = head; i != tail; i = (i+1) % _len) {
             if (to_add<= data[i]) {
                 return i;
             }
@@ -155,12 +155,12 @@ private:
     }
 
     void shift_left(unsigned int ind) {
-        for (unsigned int i = head; i != ind; i = (i+1) / _len) {//start from head - 1
-            data[i] = data[i+1];
+        for (unsigned int i = head; i != ind; i = (i+1) % _len) {//start from head - 1
+            data[i] = data[(i+1) % _len];
         }
     }
     void shift_right(unsigned int ind) {
-        for (unsigned int i = tail; i != ind; i = (i-1) / _len) {//think about how to go correctly
+        for (unsigned int i = tail; i != ind; i = (i-1) % _len) {//think about how to go correctly
             if (i == _len) {
                 data[i] = data[0];
                 continue;
@@ -176,21 +176,21 @@ public:
 
     int add(int to_add){
         unsigned int length = now_len();
-        if (length >= _len){
+        if (length >= _len - 1){
             return 0;
         }
         unsigned int ind = search_place(to_add);
-        if (ind == head) {
+        if (ind  == tail) {
+            data[tail] = to_add;
+            tail = (tail + 1) % _len + 1;
+            return 1;
+        }else if (ind  == head) {
             if (head == 0) {
-                head = _len;
+                head = _len - 1;
             }else {
-                head = (head - 1) / _len;
+                head = (head - 1) % _len + 1;
             }
             data[head] = to_add;
-            return 1;
-        }else if (ind  == tail) {
-            tail = (tail + 1) / _len;
-            data[tail] = to_add;
             return 1;
         }
         if (ind - head <= length /2) {
@@ -198,11 +198,11 @@ public:
             if (head == 0) {
                 head = _len;
             }else {
-                head = (head - 1) / _len;
+                head = (head - 1) % _len  +1;
             }
         }else {
             shift_right(ind);
-            tail = (tail + 1) / _len;
+            tail = (tail + 1) % _len + 1;
         }
         data[ind] = to_add;
         return 1;
@@ -222,7 +222,7 @@ public:
     }
 
     unsigned int now_len() {
-        if (tail > head) {
+        if (tail >= head) {
             return tail - head;
         }
         return _len - head + tail;
@@ -267,6 +267,25 @@ public:
 };
 
 int main() {
-    std::cout<<"Hello world!";
+    /*std::string root_to_input_file;
+    std::cout<<"Enter file name(start from disk)"<<std::endl;
+    std::cin>>root_to_input_file;
+    std::string line_n;
+    MadeReader reader = make_reader(root_to_input_file);
+    QueueWithPriority queue(10);
+    std::string line ="";
+    int ind=0;
+    while (std::getline(reader.reader, line)){
+        Record to_add = make_record(line);
+        queue.add(to_add.cost);
+        ind++;
+    }*/
+
+    QueueWithPriority queue(10);
+    for (int i=10;i<23;i++) {
+        queue.add(i%7);
+    }
+    // std::cout<<queue.now_len()<<std::endl;
+    queue.print();
     return 0;
 }
