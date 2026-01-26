@@ -155,20 +155,25 @@ private:
     }
 
     void shift_left(unsigned int ind) {
-        for (unsigned int i = head; i != ind; i = (i+1) % _len) {//start from head - 1
+        auto new_head = head;
+        if (new_head == 0) {
+            new_head = _len - 1;
+        }
+        for (unsigned int i = (new_head - 1) % _len; i != ind; i = (i+1) % _len) {//start from head - 1
             data[i] = data[(i+1) % _len];
         }
     }
     void shift_right(unsigned int ind) {
         for (unsigned int i = tail; i != ind; i = (i-1) % _len) {//think about how to go correctly
-            if (i == _len) {
-                data[i] = data[0];
-                continue;
-            }
-            data[i] = data[i-1];
+            std::cout<<i<<std::endl;
             if (i == 0) {
                 i = _len;
             }
+            if (i == _len ) {
+                data[0] = data[i-1];
+                continue;
+            }
+            data[i] = data[i-1];
         }
     }
 
@@ -180,32 +185,37 @@ public:
             return 0;
         }
         unsigned int ind = search_place(to_add);
+        std::cout<<"Ind:"<<ind<<std::endl;
         if (ind  == tail) {
             data[tail] = to_add;
-            tail = (tail + 1) % _len + 1;
+            tail = (tail + 1) % (_len);
             return 1;
         }else if (ind  == head) {
             if (head == 0) {
                 head = _len - 1;
             }else {
-                head = (head - 1) % _len + 1;
+                head = (head - 1) % (_len);
             }
+            // print();
             data[head] = to_add;
             return 1;
         }
         if (ind - head <= length /2) {
             shift_left(ind);
             if (head == 0) {
-                head = _len;
+                head = _len - 1;
             }else {
-                head = (head - 1) % _len  +1;
+                head = (head - 1) % (_len);
             }
+            data[ind - 1] = to_add;
+            return 1;
         }else {
             shift_right(ind);
-            tail = (tail + 1) % _len + 1;
+            tail = (tail + 1) % (_len);
+            data[ind] = to_add;
+            return 1;
         }
-        data[ind] = to_add;
-        return 1;
+        return 0;
     }
 
     int remove() {
@@ -213,11 +223,12 @@ public:
             throw std::invalid_argument("Can`t delete smth, because queue is empty");
         }
         int to_return = data[head];
-        if (head < _len) {
-            head++;
-        }else {
-            head = 0;
-        }
+        // if (head < _len) {
+        //     head++;
+        // }else {
+        //     head = 0;
+        // }
+        head = (head + 1) % (_len);
         return to_return;
     }
 
@@ -229,20 +240,29 @@ public:
     }
 
     void print() {
-        if (head > tail) {
-            for (unsigned int i = head; i < _len + 1; i++) {
-                std::cout << data[i]<<std::endl;
-            }
-            for (unsigned int i = 0; i< tail; i ++) {
-                std::cout << data[i]<<std::endl;
-            }
-        }else if (tail > head) {
-            for (unsigned int i = head; i< tail; i ++) {
-                std::cout << data[i]<<std::endl;
-            }
-        }else {
+        if (head == tail) {
             std::cout<<"Is Empty"<<std::endl;
         }
+
+        for (unsigned int i = head; i != tail; i = (i+1) % (_len)) {
+            std::cout << data[i]<<';';
+        }
+        std::cout << std::endl;
+        std::cout<<"head:"<<head<<std::endl<<"tail:"<<tail<<std::endl;
+        // if (head > tail) {
+        //     for (unsigned int i = head; i < _len + 1; i++) {
+        //         std::cout << data[i]<<std::endl;
+        //     }
+        //     for (unsigned int i = 0; i< tail; i ++) {
+        //         std::cout << data[i]<<std::endl;
+        //     }
+        // }else if (tail > head) {
+        //     for (unsigned int i = head; i< tail; i ++) {
+        //         std::cout << data[i]<<std::endl;
+        //     }
+        // }else {
+        //     std::cout<<"Is Empty"<<std::endl;
+        // }
     }
 
     QueueWithPriority(unsigned int n=10) {
@@ -283,9 +303,23 @@ int main() {
 
     QueueWithPriority queue(10);
     for (int i=10;i<23;i++) {
-        queue.add(i%7);
+        queue.add((23-i)%7);
+      //  queue.print();
     }
     // std::cout<<queue.now_len()<<std::endl;
     queue.print();
+    for (int i=10;i<19;i++) {
+        std::cout<<queue.remove()<<std::endl;
+        queue.print();
+    }
+    queue.print();
+    for (int i=10;i<23;i++) {
+        std::cout<<"to_add:"<<i%7<<std::endl;
+        queue.add(i%7);
+        queue.print();
+    }
+    // std::cout<<queue.now_len()<<std::endl;
+    queue.print();
+
     return 0;
 }
